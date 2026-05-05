@@ -85,7 +85,9 @@ ssh -N -L 8787:127.0.0.1:8787 user@your.server.com
 | **INDEX.md** | `.trace/INDEX.md` | 本文件：總覽與速查 |
 | **ARCHITECTURE.md** | `.trace/ARCHITECTURE.md` | 系統架構、元件、通訊模式、ADR |
 | **DATA_MODEL.md** | `.trace/DATA_MODEL.md` | Session 資料模型、儲存結構、生命週期 |
-| **API_SURFACE.md** | `.trace/API_SURFACE.md` | 所有 API endpoints（GET/POST/PATCH/DELETE） |
+| **API_SURFACE_part1.md** | `.trace/API_SURFACE_part1.md` | 認證、CSRF、Error Handling、SSE 串流協定、Core（健康/Session/Chat） |
+| **API_SURFACE_part2.md** | `.trace/API_SURFACE_part2.md` | Core 續、Workspace 檔案操作 |
+| **API_SURFACE_part3.md** | `.trace/API_SURFACE_part3.md` | Skills/Cron/Memory、Auth、Onboarding、完整 endpoint 清單 |
 | **DEV_GUIDE.md** | `.trace/DEV_GUIDE.md` | 開發者上手指南、測試、偵錯 |
 | **CODEBASE_MAP.md** | `.trace/CODEBASE_MAP.md` | 程式碼地圖、模組依賴、「我想改 X」速查 |
 | **DISCOVERY_LOG.md** | `.trace/DISCOVERY_LOG.md` | 探索紀錄、落差分析、技術債、待解問題 |
