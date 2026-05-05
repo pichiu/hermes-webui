@@ -165,26 +165,11 @@ PROJECTS_FILE    = STATE_DIR / "projects.json"    # api/config.py:52
 
 ### 3.9 CLI Bridge 欄位
 
-| 欄位 | 型別 | 說明 |
-|------|------|------|
-| `is_cli_session` | `bool` | 是否為從 hermes-agent CLI 匯入的 session |
-| `source_tag` | `str \| None` | 來源標籤 |
-| `raw_source` | `str \| None` | 原始來源識別 |
-| `session_source` | `str \| None` | Session 來源類型 |
-| `source_label` | `str \| None` | 顯示用的來源標籤 |
+`is_cli_session`（bool）、`source_tag`、`raw_source`、`session_source`、`source_label`：用於標記從 hermes-agent CLI 匯入的 session 及其來源資訊（`api/models.py:358-362`）。
 
 ### 3.10 compact() 輸出（`_index.json` 及 API 回應）
 
-`Session.compact()` 方法（`api/models.py:527`）產生精簡版 dict，用於 `_index.json` 及 sidebar 列表 API：
-
-額外衍生欄位（非 JSON 儲存，runtime 計算）：
-
-| 欄位 | 說明 |
-|------|------|
-| `message_count` | 訊息數量（從 index 或 len(messages) 取得） |
-| `last_message_at` | 最後一條訊息的時間戳 |
-| `has_pending_user_message` | 是否有 pending 訊息（boolean） |
-| `is_streaming` | 是否正在串流中（runtime only，不寫入磁碟） |
+`Session.compact()`（`api/models.py:527`）產生精簡 dict，用於 `_index.json` 及 sidebar API。包含所有基本欄位，加上 runtime 衍生欄位：`message_count`（訊息數）、`last_message_at`（最後訊息時間戳）、`has_pending_user_message`（boolean）、`is_streaming`（runtime only，不寫入磁碟）。
 
 ---
 
@@ -325,29 +310,13 @@ flowchart TD
     style P fill:#4a2d2d
 ```
 
-### 6.1 Session 建立
+### 生命週期說明
 
-- `POST /api/session/new` 建立新 Session（`api/routes.py`）
-- `session_id` = `uuid.uuid4().hex[:12]`（`api/models.py:330`）
-- 初始 `title` = `"Untitled"`
-- `workspace` 繼承 `last_workspace.txt` 或 `DEFAULT_WORKSPACE`
-
-### 6.2 訊息累積
-
-- 每次 `agent.run_conversation()` 完成後，更新 `session.messages`
-- 呼叫 `session.save()` 寫入磁碟（原子寫入，見第 7 節）
-- 同步更新 `_index.json`
-
-### 6.3 Title 更新
-
-- Agent 回應完成後，`_maybe_schedule_title_refresh()` 判斷是否需要生成 title
-- 若 title 仍為 provisional（前 64 字元），啟動背景 thread 呼叫 aux LLM 生成語意標題
-- 生成完成後透過 SSE 發送 `title_update` 事件，前端即時更新 sidebar
-
-### 6.4 封存與刪除
-
-- **封存**（archived=true）：Session 仍保留在磁碟，從 sidebar 主列表隱藏
-- **釘選**（pinned=true）：Session 固定在 sidebar 頂部，不受排序影響
+- **建立**：`POST /api/session/new`；`session_id = uuid4().hex[:12]`；初始 `title = "Untitled"`（`api/models.py:330`）
+- **訊息累積**：每次 `agent.run_conversation()` 完成後更新 `session.messages`，呼叫 `session.save()` 原子寫入並同步 `_index.json`
+- **Title 更新**：回應完成後 `_maybe_schedule_title_refresh()` 判斷是否啟動背景 title 生成，成功後透過 SSE `title_update` 事件即時推送前端
+- **封存**（`archived=true`）：保留磁碟檔案，從 sidebar 主列表隱藏
+- **釘選**（`pinned=true`）：固定在 sidebar 頂部
 - **刪除**：實體刪除 `{sid}.json`，同步更新 `_index.json`
 
 ---
@@ -435,9 +404,9 @@ const S = {
 
 完整 `messages` 陣列存在 `S.messages`（分開存放，避免 compact dict 過大）。
 
-### setBusy() 與 Queue Drain 機制
+### S.busy 與 Queue Drain
 
-`setBusy(false)` 時（`static/ui.js:2369`），若有 queued 訊息（`_queueDrainSid`），自動觸發下一條訊息的送出，實現 `busy_input_mode: "queue"` 的行為。
+`setBusy(false)` 時（`static/ui.js:2369`），若有 queued 訊息（`_queueDrainSid`），自動觸發下一條訊息，實現 `busy_input_mode: "queue"` 的行為。
 
 ---
 
@@ -479,7 +448,7 @@ SSE 'done' 事件
 
 ### 9.3 頁面重新整理後的恢復
 
-若使用者在 agent 執行中重新整理頁面，`boot.js` 在啟動時讀取 `localStorage` 的 INFLIGHT 資料，呼叫 `GET /api/session` 重新取得 server 端狀態，並嘗試重連 SSE stream（`static/messages.js:3220`）。
+啟動時讀取 `localStorage` 的 INFLIGHT 資料，重新取得 server 端狀態並嘗試重連 SSE stream（`static/messages.js:3220`）。
 
 ### 9.4 Session 切換並發保護
 
