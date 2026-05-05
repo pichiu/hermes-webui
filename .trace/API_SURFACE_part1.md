@@ -1,7 +1,8 @@
-# Hermes Web UI — API 參考文件（API_SURFACE）
+# Hermes Web UI — API 參考文件 Part 1（認證、SSE、Core）
 
 > 版本：v0.50.245（May 2026）  
-> 來源程式碼：`api/routes.py`（~4100 行）、`api/streaming.py`（~660 行）、`api/auth.py`（~201 行）
+> 來源程式碼：`api/routes.py`（~4100 行）、`api/streaming.py`（~660 行）、`api/auth.py`（~201 行）  
+> **Part 2**：[API_SURFACE_part2.md](API_SURFACE_part2.md)（Workspace、Skills/Cron/Memory、Auth、Onboarding、完整清單）
 
 ---
 
@@ -11,12 +12,7 @@
 2. [CSRF 保護](#2-csrf-保護)
 3. [Error Handling Pattern](#3-error-handling-pattern)
 4. [SSE 串流協定](#4-sse-串流協定)
-5. [Core — 健康、Session、Chat](#5-core--健康session-和-chat)
-6. [Workspace — 檔案與工作目錄](#6-workspace--檔案與工作目錄)
-7. [Skills / Cron / Memory](#7-skills--cron--memory)
-8. [Auth — 認證](#8-auth--認證)
-9. [Onboarding — 初始設定精靈](#9-onboarding--初始設定精靈)
-10. [完整 Endpoint 清單](#10-完整-endpoint-清單)
+5. [Core — 健康、Session 和 Chat](#5-core--健康session-和-chat)
 
 ---
 
@@ -87,9 +83,7 @@ do_GET/POST/PATCH/DELETE
 ### 標準 JSON Error 格式
 
 ```json
-{
-  "error": "描述訊息"
-}
+{"error": "描述訊息"}
 ```
 
 ### 常見 HTTP Status Codes
@@ -106,9 +100,7 @@ do_GET/POST/PATCH/DELETE
 | 429 | 登入嘗試次數過多 |
 | 500 | 伺服器內部錯誤 |
 
-### 安全回應 Headers
-
-每個回應都包含（**來源**：`api/helpers.py:38-55`）：
+### 安全回應 Headers（每個回應）
 
 ```
 X-Content-Type-Options: nosniff
@@ -128,20 +120,17 @@ Hermes Web UI 使用 **Server-Sent Events（SSE）** 而非 WebSocket 進行即�
 
 ```
 1. POST /api/chat/start   → { stream_id, session_id }
-2. GET  /api/chat/stream?stream_id=<id>   （保持連線，Content-Type: text/event-stream）
+2. GET  /api/chat/stream?stream_id=<id>   （保持連線）
 3. 接收 SSE events...
-4. 接收 done / error / cancel → 客戶端關閉連線
+4. 收到 stream_end / error / cancel → 客戶端關閉連線
 ```
 
 ### SSE Wire Format
 
 ```
-data: {"event_type": "token", "text": "Hello"}
-
-data: {"event_type": "done", "session": {...}, "usage": {...}}
+data: {"event_type": "token", "text": "Hello"}\n\n
+: heartbeat\n\n   （keepalive，每 N 秒）
 ```
-
-每條 SSE 訊息格式：`data: <JSON>\n\n`。心跳（keepalive）：`: heartbeat\n\n`（每 N 秒發送）。
 
 ### 完整 Event Types
 
@@ -152,7 +141,7 @@ data: {"event_type": "done", "session": {...}, "usage": {...}}
 | `tool` | 工具呼叫進度通知 | `event_type`, `name`, `preview`, `args`, `done` |
 | `approval` | 危險命令等待人類核准 | `session_id`, `command`, `description` |
 | `title` | Session 標題已生成/更新 | `session_id: str`, `title: str` |
-| `title_status` | 標題生成過程的狀態 | `session_id`, `status`, `reason`, `title` |
+| `title_status` | 標題生成過程的狀態 | `session_id`, `status`, `reason` |
 | `done` | Agent 本次對話完成 | `session`, `usage` (含 token 用量) |
 | `stream_end` | 串流結束（含標題生成後） | `session_id: str` |
 | `error` | Agent 執行錯誤 | `message: str`, `type: str` |
@@ -160,7 +149,7 @@ data: {"event_type": "done", "session": {...}, "usage": {...}}
 | `metering` | 即時 token/cost 計量 | `session_id`, `tps_available`, `estimated` |
 | `pending_steer_leftover` | `/steer` 指令未消費殘留 | `session_id`, `text` |
 
-**來源**：`api/streaming.py:1491-1500`、`api/streaming.py:1671`、`api/streaming.py:1747`、`api/streaming.py:2157`、`api/streaming.py:2611`
+**來源**：`api/streaming.py:1491`、`:1671`、`:1747`、`:2157`、`:2611`
 
 ### `tool` Event 的 `event_type` 子類型
 
@@ -178,7 +167,7 @@ sequenceDiagram
     participant S as WebUI Server
     participant A as AIAgent
 
-    C->>S: POST /api/chat/start<br/>{session_id, message, model}
+    C->>S: POST /api/chat/start {session_id, message, model}
     S-->>C: {stream_id: "abc123"}
 
     C->>S: GET /api/chat/stream?stream_id=abc123
@@ -216,17 +205,211 @@ sequenceDiagram
     end
 ```
 
-### Gateway SSE 串流（獨立端點）
+### Gateway SSE 串流
 
-```
-GET /api/sessions/gateway/stream
-```
-
-專用於 Telegram/Discord/Slack 等 messaging platform 的 session 即時更新推送（`api/gateway_watcher.py`）。
+`GET /api/sessions/gateway/stream` — 專用於 Telegram/Discord/Slack messaging platform 的 sidebar 即時更新（`api/gateway_watcher.py`）。
 
 ---
 
+## 5. Core — 健康、Session 和 Chat
+
+### `GET /health`
+
+健康檢查，不需要認證（在 PUBLIC_PATHS 中）。
+
+**Response 200**：`{"status": "ok"}`
 
 ---
 
-**→ 繼續閱讀**：[API_SURFACE_part2.md](API_SURFACE_part2.md)（Core Session/Chat、Workspace）
+### Session 管理
+
+#### `GET /api/session?session_id=<sid>`
+
+取得單一 session 的完整資料（`api/routes.py:2225`）。
+
+**Query Params**：
+- `session_id`（必要）
+- `messages=0`：略過 messages payload，加快 sidebar 切換速度
+
+**Response 200**：
+```json
+{
+  "session": {
+    "session_id": "abc123def456",
+    "title": "My Conversation",
+    "model": "anthropic/claude-sonnet-4.6",
+    "workspace": "/home/user/project",
+    "messages": [...],
+    "created_at": 1714000000,
+    "updated_at": 1714001000
+  }
+}
+```
+
+---
+
+#### `GET /api/sessions`
+
+列出所有 session（含 CLI sessions、按 `last_message_at` 倒序，`api/routes.py:2431`）。
+
+**Query Params**：`all_profiles=1`（顯示所有 profile 的 sessions）
+
+**Response 200**：
+```json
+{
+  "sessions": [...],
+  "cli_count": 5,
+  "all_profiles": false,
+  "active_profile": "default",
+  "other_profile_count": 3,
+  "server_time": 1714000000.0,
+  "server_tz": "+0800"
+}
+```
+
+---
+
+#### `POST /api/session/new`
+
+建立新 session（`api/routes.py:2910`）。
+
+**Request Body**：
+```json
+{
+  "workspace": "/home/user/project",
+  "model": "anthropic/claude-sonnet-4.6",
+  "model_provider": "anthropic",
+  "profile": "default",
+  "project_id": "proj_abc"
+}
+```
+
+**Response 200**：`{"session": {"session_id": "abc123", "title": "Untitled", "messages": [], ...}}`
+
+---
+
+#### Session 操作快速參考
+
+| Endpoint | Method | 說明 | Request 必要欄位 |
+|----------|--------|------|-----------------|
+| `/api/session/status` | GET | Stream 狀態 | `?session_id=` |
+| `/api/session/duplicate` | POST | 深度複製 session | `session_id` |
+| `/api/session/rename` | POST | 重新命名 | `session_id`, `title` |
+| `/api/session/delete` | POST | 刪除 | `session_id` |
+| `/api/session/clear` | POST | 清空 messages | `session_id` |
+| `/api/session/branch` | POST | 建立分支 | `session_id`, `message_index` |
+| `/api/session/pin` | POST | 釘選/取消釘選 | `session_id`, `pinned` |
+| `/api/session/archive` | POST | 封存/取消封存 | `session_id`, `archived` |
+| `/api/session/move` | POST | 移動至 project | `session_id`, `project_id` |
+| `/api/session/update` | POST | 更新 metadata | `session_id` |
+| `/api/session/compress` | POST | 壓縮 context | `session_id` |
+| `/api/session/truncate` | POST | 截斷 messages | `session_id` |
+| `/api/session/retry` | POST | 重試最後訊息 | `session_id` |
+| `/api/session/undo` | POST | 撤銷最後回覆 | `session_id` |
+| `/api/session/yolo` | GET/POST | YOLO 模式切換 | `session_id` |
+| `/api/session/toolsets` | POST | 設定 toolsets | `session_id`, `toolsets` |
+| `/api/session/export` | GET | 匯出 JSON | `?session_id=` |
+| `/api/session/import` | POST | 匯入 JSON | session JSON |
+| `/api/session/import_cli` | POST | 匯入 CLI session | `session_id` |
+| `/api/session/usage` | GET | Token 用量 | `?session_id=` |
+| `/api/session/conversation-rounds` | GET | 對話輪次 | `?session_id=` |
+| `/api/session/handoff-summary` | GET | Context 摘要 | `?session_id=` |
+| `/api/sessions/search` | GET | 搜尋標題 | `?q=` |
+| `/api/sessions/cleanup` | POST | 清理空 sessions | — |
+
+---
+
+### Chat（核心對話）
+
+#### `POST /api/chat/start`
+
+啟動一次 agent 對話，建立 SSE stream（`api/routes.py:3425`）。
+
+**Request Body**：
+```json
+{
+  "session_id": "abc123",
+  "message": "請幫我分析這段程式碼",
+  "model": "anthropic/claude-sonnet-4.6",
+  "model_provider": "anthropic",
+  "workspace": "/home/user/project",
+  "attachments": []
+}
+```
+
+**Response 200**：`{"stream_id": "xyz789", "session_id": "abc123"}`
+
+接著建立 SSE 連線：`GET /api/chat/stream?stream_id=xyz789`
+
+---
+
+#### `GET /api/chat/stream?stream_id=<id>`
+
+SSE 串流端點（`api/routes.py:4231`）。保持長連線，逐一推送 SSE events（詳見第 4 節）。
+
+串流結束條件：收到 `stream_end`、`error`、或 `cancel` event。
+
+---
+
+#### Chat 操作快速參考
+
+| Endpoint | Method | 說明 |
+|----------|--------|------|
+| `/api/chat/stream/status` | GET | 查詢 `?stream_id=` 是否活躍 |
+| `/api/chat/cancel` | GET | 取消 stream（`?stream_id=`） |
+| `/api/chat` | POST | 同步（非串流）chat |
+| `/api/chat/steer` | POST | Mid-stream steering（`{"session_id":"...","text":"..."}`) |
+| `/api/btw` | POST | Ephemeral 對話（不儲存） |
+
+---
+
+### Approval & Clarify
+
+| Endpoint | Method | 說明 |
+|----------|--------|------|
+| `/api/approval/pending` | GET | 查詢待核准命令（`?session_id=`） |
+| `/api/approval/stream` | GET | SSE：核准推送 |
+| `/api/approval/respond` | POST | 核准/拒絕（`{"session_id":"...","approved":true}`） |
+| `/api/clarify/pending` | GET | 查詢待澄清問題 |
+| `/api/clarify/stream` | GET | SSE：澄清推送 |
+| `/api/clarify/respond` | POST | 回答澄清（`{"session_id":"...","choice":"..."}`) |
+
+---
+
+### Settings & Models
+
+#### `GET /api/settings`
+
+取得使用者設定（不含 `password_hash`，`api/routes.py:2187`）。
+
+**Response 200**（精簡）：
+```json
+{
+  "model": "anthropic/claude-sonnet-4.6",
+  "send_key": "enter",
+  "show_cli_sessions": false,
+  "password_env_var": false,
+  "webui_version": "v0.50.245",
+  "agent_version": "..."
+}
+```
+
+---
+
+#### `POST /api/settings`
+
+儲存使用者設定。特殊欄位：`_set_password`（設定密碼）、`_clear_password`（清除密碼）。
+
+若 `HERMES_WEBUI_PASSWORD` 環境變數已設定，修改密碼操作 → HTTP 409（`api/routes.py:3639-3646`）。
+
+---
+
+#### `GET /api/updates/check`
+
+查詢是否有新版本（GitHub Releases API）。
+
+**Response 200**：`{"available": true, "current": "v0.50.245", "latest": "v0.50.291", "url": "..."}`
+
+---
+
+*程式碼來源：`api/routes.py`（handle_get L2033、handle_post L2878）、`api/streaming.py`、`api/auth.py:1-80`*
