@@ -1,7 +1,7 @@
 # Hermes Web UI — 系統架構文件
 
-> 版本：v0.50.245（April 30, 2026）  
-> 撰寫日期：2026-05-05
+> 版本：v0.51.2（May 5, 2026）  
+> 撰寫日期：2026-05-05（增量更新：2026-05-05）
 
 ---
 
@@ -119,7 +119,7 @@ graph LR
 | **messages.js** | `send()` 函式、SSE EventSource 處理、INFLIGHT 狀態 | `static/messages.js`（~655 行） | `ui.js`, `sessions.js` | `POST /api/chat/start`, `GET /api/chat/stream` |
 | **ui.js** | DOM helpers、`renderMd()`、全域狀態 `S`、tool cards | `static/ui.js`（~1740 行） | 所有前端模組共用 | Prism.js, Mermaid.js, streaming-markdown |
 | **sessions.js** | Session CRUD、search、sidebar 渲染 | `static/sessions.js`（~800 行） | `ui.js` | `GET/POST/DELETE /api/sessions` |
-| **panels.js** | Cron / Skills / Memory / Profiles / Settings 面板 | `static/panels.js`（~1438 行） | `ui.js` | 各 `/api/` 端點 |
+| **panels.js** | Cron / Skills / Memory / Profiles / Settings / Logs / Wiki 面板 | `static/panels.js`（~1622 行） | `ui.js` | 各 `/api/` 端點（含 `/api/logs`、`/api/wiki/status`） |
 | **boot.js** | 行動導覽、voice input、啟動 IIFE | `static/boot.js`（~524 行） | 所有前端模組 | `loadSession()` |
 
 ---
@@ -364,6 +364,8 @@ sequenceDiagram
 | **自訂主題** | `:root[data-theme="name"]` CSS custom properties | 低（純 CSS） |
 | **新增 API endpoint** | `api/routes.py` 新增 `elif` 分支 | 低 |
 | **新增 sidebar panel** | `index.html` + `panels.js` + `boot.js` + `style.css` | 中 |
+| **Logs panel**（v0.51.2） | `panelLogs`：5 秒自動 refresh、`_logsAutoRefreshTimer`、行級別顏色、wrap toggle、copy all | 已實作 |
+| **LLM Wiki Status**（v0.51.2） | Insights panel 的 `wiki-status-card`，由 `GET /api/wiki/status` 提供資料 | 已實作 |
 | **新增 slash command** | `static/commands.js` commands array | 低 |
 | **新增 AI provider** | `api/onboarding.py` 新增 provider 偵測 | 中 |
 | **新增 toolset** | `~/.hermes/config.yaml` 的 `platform_toolsets.cli` | 低（設定） |

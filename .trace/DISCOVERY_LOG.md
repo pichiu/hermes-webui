@@ -210,3 +210,35 @@ graph TD
 | H | Authentication + CORS | PARTIAL（auth 已實作，CORS B13 open） |
 | I | Test Infrastructure | COMPLETE（unit tests 仍少） |
 | J | Performance / Concurrency Limits | **Not Started** |
+
+---
+
+## 增量更新紀錄（2026-05-05）
+
+**Base Commit 範圍**：`e23ba59..fcc8328`（v0.50.245 → v0.51.2）  
+**變更幅度**：8 個檔案 / 484 個（1.7%）
+
+### 新功能
+
+**Logs Tab MVP**（`af1c628`）
+- 新 sidebar panel `panelLogs`，提供 agent / errors / gateway 三個 log 檔案的即時檢視
+- 後端 `GET /api/logs?file=agent|errors|gateway&tail=200`，白名單保護、最大 4 MB
+- 每 5 秒自動 refresh（`_logsAutoRefreshTimer`）；行級別顏色（WARNING=黃、ERROR/CRITICAL=紅）
+- 附 wrap toggle 與 copy all 功能
+
+**LLM Wiki Status Panel**（`2684d6f`）
+- Insights panel 新增 `wiki-status-card`：顯示 LLM Wiki 啟用狀態、路徑、頁面數
+- 後端 `GET /api/wiki/status`，由 `_build_llm_wiki_status()` 組裝
+
+### 邏輯改進
+
+**CLI Session Filtering**（PR #1587，`79d0762`-`d76ef2a`）
+- 新常數：`CLI_MIN_UNTITLED_MESSAGE_COUNT = 6`、`CLI_MIN_UNTITLED_USER_MESSAGE_COUNT = 2`
+- 低價值 CLI session（Untitled、空對話）需有 ≥6 messages 且 ≥2 user messages 才在 sidebar 顯示
+- `CLI_VISIBLE_SESSION_LIMIT = 20`：CLI sessions 上限
+- `Session.compact()` 新增 `user_message_count` 欄位（用於過濾判斷）
+
+### Bug Fix
+
+**Sidebar scroll fix**（#1669，`4e9ec6f`）
+- 修復：session 列表 ≤80 個時 scroll 跳回頂部的問題（`static/sessions.js`）

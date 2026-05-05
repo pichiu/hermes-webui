@@ -2,7 +2,7 @@
 
 ## 一句話總結
 
-Hermes Web UI 是一個**無 build 步驟的輕量瀏覽器介面**，讓你能在瀏覽器或手機上使用 Hermes Agent（NousResearch 出品的自主式 AI agent），提供與 CLI 完全相同的功能：對話、session 管理、cron 排程、skills、memory，以及 workspace 檔案瀏覽。
+Hermes Web UI 是一個**無 build 步驟的輕量瀏覽器介面**（v0.51.2），讓你能在瀏覽器或手機上使用 Hermes Agent（NousResearch 出品的自主式 AI agent），提供與 CLI 完全相同的功能：對話、session 管理、cron 排程、skills、memory、workspace 檔案瀏覽，以及 Log 檢視器與 LLM Wiki 狀態面板。
 
 ---
 
@@ -87,7 +87,7 @@ ssh -N -L 8787:127.0.0.1:8787 user@your.server.com
 | **DATA_MODEL.md** | `.trace/DATA_MODEL.md` | Session 資料模型、儲存結構、生命週期 |
 | **API_SURFACE_part1.md** | `.trace/API_SURFACE_part1.md` | 認證、CSRF、Error Handling、SSE 串流協定、Core（健康/Session/Chat） |
 | **API_SURFACE_part2.md** | `.trace/API_SURFACE_part2.md` | Core 續、Workspace 檔案操作 |
-| **API_SURFACE_part3.md** | `.trace/API_SURFACE_part3.md` | Skills/Cron/Memory、Auth、Onboarding、完整 endpoint 清單 |
+| **API_SURFACE_part3.md** | `.trace/API_SURFACE_part3.md` | Skills/Cron/Memory、Auth、Onboarding、Logs、Wiki Status、完整 endpoint 清單 |
 | **DEV_GUIDE.md** | `.trace/DEV_GUIDE.md` | 開發者上手指南、測試、偵錯 |
 | **CODEBASE_MAP.md** | `.trace/CODEBASE_MAP.md` | 程式碼地圖、模組依賴、「我想改 X」速查 |
 | **DISCOVERY_LOG.md** | `.trace/DISCOVERY_LOG.md` | 探索紀錄、落差分析、技術債、待解問題 |

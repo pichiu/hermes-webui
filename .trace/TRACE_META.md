@@ -5,28 +5,29 @@
 - **Trace Branch**: trace/docs
 
 ## 最後 Trace 資訊
-- **Base Commit Hash**: e23ba59df25bdcc5a357b85cc3b6faf65a1363d0
+- **Base Commit Hash**: fcc8328（v0.51.2）
 - **日期**: 2026-05-05
-- **Trace 類型**: full
-- **涵蓋範圍**: 全部（484 個檔案，低於 500 門檻，無需縮限範圍）
+- **Trace 類型**: incremental
+- **涵蓋範圍**: 增量更新（8 個受影響檔案，e23ba59..fcc8328）
 
 ## 文件清單
 | 文件 | 對應 Base Commit | 最後更新日期 |
 |------|-----------------|-------------|
-| INDEX.md | e23ba59 | 2026-05-05 |
-| ARCHITECTURE.md | e23ba59 | 2026-05-05 |
-| DATA_MODEL.md | e23ba59 | 2026-05-05 |
+| INDEX.md | fcc8328 | 2026-05-05 |
+| ARCHITECTURE.md | fcc8328 | 2026-05-05 |
+| DATA_MODEL.md | fcc8328 | 2026-05-05 |
 | API_SURFACE_part1.md | e23ba59 | 2026-05-05 |
 | API_SURFACE_part2.md | e23ba59 | 2026-05-05 |
-| API_SURFACE_part3.md | e23ba59 | 2026-05-05 |
+| API_SURFACE_part3.md | fcc8328 | 2026-05-05 |
 | DEV_GUIDE.md | e23ba59 | 2026-05-05 |
-| CODEBASE_MAP.md | e23ba59 | 2026-05-05 |
-| DISCOVERY_LOG.md | e23ba59 | 2026-05-05 |
+| CODEBASE_MAP.md | fcc8328 | 2026-05-05 |
+| DISCOVERY_LOG.md | fcc8328 | 2026-05-05 |
 
 ## 變更歷程
 | 日期 | 類型 | Base Commit 範圍 | 更新的文件 | 摘要 |
 |------|------|-----------------|-----------|------|
 | 2026-05-05 | full | initial..e23ba59 | 全部 | 初次 trace（v0.50.245） |
+| 2026-05-05 | incremental | e23ba59..fcc8328 | INDEX、ARCHITECTURE、DATA_MODEL、API_SURFACE_part3、CODEBASE_MAP、DISCOVERY_LOG | v0.51.2：Logs Tab、LLM Wiki Status、CLI session filtering、scroll fix |
 
 ## _context 說明
 `.trace/_context/` 中的中繼檔案是 trace 的中間產物：

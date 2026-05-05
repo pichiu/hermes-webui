@@ -12,6 +12,8 @@
 | 修改 chat UI | `static/messages.js` | `send()`、SSE handlers |
 | 修改右側面板（workspace） | `static/workspace.js` | `loadDir()`、`openFile()` |
 | 修改 Tasks/Skills/Memory/Profiles 面板 | `static/panels.js` | `load*()` 函式 |
+| 修改 Logs 面板（log 檔案檢視器） | `static/panels.js` + `api/routes.py` | `panelLogs`、`_handle_logs()`、`GET /api/logs` |
+| 修改 LLM Wiki Status 顯示 | `static/panels.js` + `api/routes.py` | `wiki-status-card`、`_handle_llm_wiki_status()` |
 | 修改 slash commands | `static/commands.js` | commands registry array |
 | 修改全域 DOM helpers | `static/ui.js` | `renderMd()`、`setBusy()`、`showToast()` |
 | 修改行動導覽 / voice input | `static/boot.js` | boot IIFE |

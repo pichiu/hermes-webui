@@ -1,7 +1,7 @@
 # DATA_MODEL.md — Hermes Web UI 資料模型文件
 
-> 版本：v0.50.245（April 30, 2026）  
-> 撰寫日期：2026-05-05
+> 版本：v0.51.2（May 5, 2026）  
+> 撰寫日期：2026-05-05（增量更新：2026-05-05）
 
 ---
 
@@ -169,7 +169,15 @@ PROJECTS_FILE    = STATE_DIR / "projects.json"    # api/config.py:52
 
 ### 3.10 compact() 輸出（`_index.json` 及 API 回應）
 
-`Session.compact()`（`api/models.py:527`）產生精簡 dict，用於 `_index.json` 及 sidebar API。包含所有基本欄位，加上 runtime 衍生欄位：`message_count`（訊息數）、`last_message_at`（最後訊息時間戳）、`has_pending_user_message`（boolean）、`is_streaming`（runtime only，不寫入磁碟）。
+`Session.compact()`（`api/models.py:527`）產生精簡 dict，用於 `_index.json` 及 sidebar API。包含所有基本欄位，加上 runtime 衍生欄位：
+
+| 衍生欄位 | 型別 | 說明 |
+|----------|------|------|
+| `message_count` | `int` | 訊息總數（所有 role） |
+| `user_message_count` | `int` | `role="user"` 的訊息數（v0.51.2 新增，用於 CLI session 過濾） |
+| `last_message_at` | `float \| null` | 最後訊息的時間戳 |
+| `has_pending_user_message` | `bool` | 是否有排隊中的使用者訊息 |
+| `is_streaming` | `bool` | runtime only，不寫入磁碟 |
 
 ---
 

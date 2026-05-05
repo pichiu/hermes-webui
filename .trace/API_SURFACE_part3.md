@@ -1,6 +1,7 @@
 # Hermes Web UI — API 參考文件（第三部分）
 
-> **← 第二部分**：[API_SURFACE_part2.md](API_SURFACE_part2.md)（Core Session/Chat、Workspace）
+> **← 第二部分**：[API_SURFACE_part2.md](API_SURFACE_part2.md)（Core Session/Chat、Workspace）  
+> 版本：v0.51.2（May 2026，增量更新：2026-05-05）
 
 ## 7. Skills / Cron / Memory
 
@@ -458,7 +459,81 @@ Onboarding 端點在**未啟用認證**時限制只允許本地網路（loopback
 
 ---
 
-## 10. 完整 Endpoint 清單
+## 10. Logs & Wiki Status（v0.51.2 新增）
+
+### `GET /api/logs`
+
+取得指定 log 檔案的最後 N 行內容。
+
+**Query Parameters**：
+
+| 參數 | 必填 | 說明 | 範例 |
+|------|------|------|------|
+| `file` | 是 | Log 檔案類型；允許值：`agent`、`errors`、`gateway` | `?file=agent` |
+| `tail` | 否 | 回傳行數；允許值：`100`、`200`、`500`、`1000`，預設 `200` | `?tail=500` |
+
+**回應（200 OK）**：
+
+```json
+{
+  "lines": [
+    "2026-05-05 12:00:01 INFO  Agent started",
+    "2026-05-05 12:00:02 WARNING Low memory",
+    "2026-05-05 12:00:03 ERROR Connection failed"
+  ],
+  "file": "agent",
+  "tail": 200
+}
+```
+
+**錯誤回應**：
+
+| 狀態碼 | 條件 |
+|--------|------|
+| 400 | `file` 參數不在白名單（`agent` / `errors` / `gateway`）或 `tail` 不在允許值內 |
+| 404 | Log 檔案不存在（agent 尚未啟動過） |
+
+**實作細節**：
+- 白名單：`{"agent": "agent.log", "errors": "errors.log", "gateway": "gateway.log"}`（`api/routes.py`）
+- `tail` 正規化函式 `_normalize_logs_tail(raw_tail)` — 若無效值則 fallback 至 200
+- 最大讀取 4 MB（保護超大 log 檔）
+- 前端 `panelLogs`（`static/panels.js`）每 5 秒自動 refresh（`_logsAutoRefreshTimer`）
+- 行級別顏色渲染：WARNING=黃、ERROR/CRITICAL=紅
+
+---
+
+### `GET /api/wiki/status`
+
+取得 LLM Wiki 整合狀態。
+
+**回應（200 OK）**：
+
+```json
+{
+  "enabled": true,
+  "path": "/home/user/.hermes/wiki",
+  "page_count": 42,
+  "config_source": "config.yaml",
+  "last_checked": 1746446400.0
+}
+```
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `enabled` | `bool` | LLM Wiki 功能是否啟用 |
+| `path` | `str \| null` | Wiki 目錄的絕對路徑（`null` 表示未設定） |
+| `page_count` | `int` | Wiki 目錄下的 Markdown 頁面數量 |
+| `config_source` | `str` | 設定來源（`"config.yaml"` 或 `"env"`） |
+| `last_checked` | `float` | 最後一次檢查的 Unix timestamp |
+
+**實作細節**：
+- 後端函式：`_build_llm_wiki_status()`（`api/routes.py`）
+- 多個 `_llm_wiki_*` 輔助函式負責路徑解析、config 讀取、檔案計數
+- 前端顯示在 Insights panel 的 `wiki-status-card`（`static/panels.js`、`static/index.html`）
+
+---
+
+## 11. 完整 Endpoint 清單
 
 ### GET 端點
 
@@ -518,6 +593,8 @@ Onboarding 端點在**未啟用認證**時限制只允許本地網路（loopback
 | `/api/updates/check` | 更新檢查 |
 | `/api/commands` | Slash commands |
 | `/api/personalities` | Personality 清單 |
+| `/api/logs` | Log 檔案內容（`?file=agent\|errors\|gateway&tail=200`） |
+| `/api/wiki/status` | LLM Wiki 整合狀態 |
 | `/api/background/status` | 背景任務狀態 |
 | `/api/dashboard/status` | Dashboard 狀態 |
 | `/api/dashboard/config` | Dashboard 設定 |
